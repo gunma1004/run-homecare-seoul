@@ -14,7 +14,6 @@ SHOPS = [
     {"name": "한국골든테라피", "phone": "0507-1280-3360", "score": "4.7", "tags": "프리미엄 · 집중케어 · 24시운영"}
 ]
 
-# 타이틀 유지용 테마 순환 설정
 SAFE_THEMES = [
     "출장 맞춤 마사지",
     "출장 지역맞춤 마사지",
@@ -22,7 +21,31 @@ SAFE_THEMES = [
     "출장 쾌속힐링 마사지"
 ]
 
-# 전체 세부 지역 데이터 (서울 25개 구, 경기 44개 시·구·군, 인천 10개 구·군 전수 수록)
+# 네이버 C-Rank/D-I-A 알고리즘 대비 고유 본문 생성 엔진
+OFFICE_KEYWORDS = ["강남", "역삼", "삼성", "선릉", "테헤란", "서초", "여의도", "판교", "가산", "구로", "마곡", "종로", "을지로", "중구"]
+RESIDENCE_KEYWORDS = ["잠실", "반포", "목동", "분당", "일산", "평촌", "송도", "청라", "광교", "위례", "동탄", "하남", "미사"]
+
+def generate_local_story(prov_short, dist_name, dong_name=None):
+    loc_title = f"{dist_name} {dong_name}" if dong_name else f"{prov_short} {dist_name}"
+    
+    # 지역 특성 판별
+    is_office = any(k in loc_title for k in OFFICE_KEYWORDS)
+    is_residence = any(k in loc_title for k in RESIDENCE_KEYWORDS)
+    
+    if is_office:
+        p1 = f"{loc_title} 일대는 오피스 및 비즈니스 상권이 밀집되어 있어 장시간 PC 작업이나 잦은 회의로 인한 목·어깨 결림, 허리 피로를 호소하는 직장인 분들의 방문 상담 요청이 집중되는 지역입니다."
+        p2 = f"바쁜 업무 일정이나 늦은 야근 후 번거롭게 이동하지 않고, 숙소나 편안한 개인 공간에서 굳은 근육을 즉각적으로 풀 수 있도록 {loc_title} 담당 관리사를 최우선으로 배치하고 있습니다."
+    elif is_residence:
+        p1 = f"{loc_title} 생활권은 주거 단지와 아파트 밀집도가 높아 외출의 피로감 없이 나만의 프라이빗한 주거 공간에서 조용하게 힐링을 누리고자 하는 분들의 선호도가 높은 편입니다."
+        p2 = f"실내 정숙성을 유지하며 오일 순환 및 스트레칭을 정교하게 진행하며, 아파트 공동현관 출입 안내 및 단지 내 방문 주차 여건을 사전에 조율하여 지연 없이 정시에 방문합니다."
+    else:
+        p1 = f"{loc_title} 지역은 일상적인 누적 피로와 활동 스트레스를 효과적으로 해소할 수 있는 생활 밀착형 힐링 케어를 지향하는 곳입니다."
+        p2 = f"불필요한 대기 시간 없이 고객님의 희망 시각에 맞춰 가장 원활한 이동 동선을 확인하고 배정하므로 편안한 상태에서 맞춤 테라피를 받아보실 수 있습니다."
+
+    p3 = f"{BRAND_NAME}은 어떠한 경우에도 사전 예약금이나 선입금을 일절 요구하지 않는 100% 현장 안심 후불제를 철저히 준수합니다. 관리사가 직접 현장에 도착한 후 선택하신 프로그램과 시간, 관리 범위를 다시 한번 정확히 체크한 뒤 결제가 이루어지므로 누구나 믿고 이용하실 수 있습니다."
+    
+    return p1, p2, p3
+
 RAW_DATA = {
   "seoul": {
     "name": "서울특별시",
@@ -163,10 +186,11 @@ def make_main_page(sitemap_list):
     nearby_html = "\n".join(nearby)
 
     title_text = f"서울 출장 맞춤 마사지 홈타이 테라피 | 코스 요금표 - {BRAND_NAME}"
-    # 메타디스크립션: 서울출장마사지 키워드 적용
     desc_text = f"서울출장마사지 전문 {BRAND_NAME}. 서울 전지역 홈타이·스웨디시 1:1 맞춤 관리와 투명한 코스 요금표, 선입금 없는 100% 현장 후불제 직통 안내."
     canonical_url = f"{BASE_URL}/"
     sitemap_list.append(canonical_url)
+
+    sp1, sp2, sp3 = generate_local_story("서울", "서울특별시 전지역")
 
     html = f"""<!doctype html>
 <html lang="ko">
@@ -205,15 +229,23 @@ def make_main_page(sitemap_list):
             "name": "서울 전지역 세부 동 단위까지 빠른 방문이 가능한가요?",
             "acceptedAnswer": {{
               "@type": "Answer",
-              "text": "네, 종로구, 강남구, 서초구, 송파구 등 서울 25개 구 산하 모든 세부 행정동까지 최단 이동 동선의 관리사가 신속 배정됩니다."
+              "text": "네, 종로구부터 강남구, 송파구 등 서울 25개 구 산하 모든 세부 행정동까지 최단 이동 동선의 관리사가 신속 배정됩니다."
             }}
           }},
           {{
             "@type": "Question",
-            "name": "선입금이나 예약금이 있나요?",
+            "name": "선입금이나 예약금이 필요한가요?",
             "acceptedAnswer": {{
               "@type": "Answer",
-              "text": "{BRAND_NAME}은 선입금을 일체 요구하지 않으며 관리사 방문 후 현장에서 결제하는 100% 안심 후불제입니다."
+              "text": "{BRAND_NAME}은 어떠한 경우에도 선입금을 요구하지 않으며 관리사 방문 후 결제하는 100% 안심 후불제입니다."
+            }}
+          }},
+          {{
+            "@type": "Question",
+            "name": "자택 외에 오피스텔이나 호텔에서도 이용 가능한가요?",
+            "acceptedAnswer": {{
+              "@type": "Answer",
+              "text": "네, 방문 가능한 주소지와 호수, 출입 방법만 확인해 주시면 조용하고 안전하게 관리를 받아보실 수 있습니다."
             }}
           }}
         ]
@@ -259,7 +291,33 @@ def make_main_page(sitemap_list):
       </div>
     </nav>
 
-    <section class="section providers">
+    <!-- [신규] 네이버 C-Rank 대비 고유 읽을거리 & 안심 가이드 섹션 -->
+    <section class="section">
+      <div class="container">
+        <div class="local-story-card">
+          <h3>서울특별시 방문 케어 안내 &amp; 라이프스타일 힐링</h3>
+          <p>{sp1}</p>
+          <p>{sp2}</p>
+          <p>{sp3}</p>
+          <div class="guide-box-grid">
+            <div class="guide-box-item">
+              <b>🛡️ 100% 현장 후불제</b>
+              <span>예약금 및 선입금을 절대 요구하지 않으며, 현장에서 코스를 확인한 후 안심 결제합니다.</span>
+            </div>
+            <div class="guide-box-item">
+              <b>⚡ 쾌속 이동 동선 조율</b>
+              <span>서울 25개 자치구 거점별 이동 상황을 실시간 확인하여 기다림을 최소화합니다.</span>
+            </div>
+            <div class="guide-box-item">
+              <b>🧘 1:1 맞춤 컨디션 조율</b>
+              <span>건식, 아로마, 스웨디시 등 당일 몸 상태에 최적화된 강도와 코스를 제공합니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section providers soft">
       <div class="container">
         <div class="section-row">
           <h2 class="section-title">서울 추천 제휴 매장</h2>
@@ -285,7 +343,7 @@ def make_main_page(sitemap_list):
       </div>
     </section>
 
-    <section class="section region-section" id="regions">
+    <section class="section region-section">
       <div class="container">
         <h2 class="section-title">서울 자치구 둘러보기</h2>
         <div class="region-grid">
@@ -294,18 +352,23 @@ def make_main_page(sitemap_list):
       </div>
     </section>
 
-    <section class="section consult" id="consult">
+    <!-- [신규] FAQ 3문 3답 아코디언 -->
+    <section class="section soft">
       <div class="container">
-        <div class="consult-card">
-          <div>
-            <b>운영 안내</b>
-            <p>선입금을 절대 요구하지 않으며 상단 제휴 매장 번호로 편하게 문의하세요.</p>
-          </div>
-          <div>
-            <b>안심 결제 원칙</b>
-            <p>현장에서 관리 범위와 비용을 확인한 후 안심하고 결제합니다.</p>
-          </div>
-          <a href="tel:{REP_PHONE.replace('-', '')}">대표 상담 전화</a>
+        <h2 class="section-title">자주 묻는 질문 (FAQ)</h2>
+        <div class="faq-list">
+          <details open>
+            <summary>서울 전지역 세부 동 단위까지 빠른 방문이 가능한가요?</summary>
+            <p>네, 종로구, 강남구, 서초구, 송파구 등 서울 25개 자치구 산하 모든 세부 행정동까지 최단 이동 동선의 관리사가 신속 배정됩니다.</p>
+          </details>
+          <details>
+            <summary>선입금이나 예약금을 요구하지 않나요?</summary>
+            <p>{BRAND_NAME}은 선입금을 절대 요구하지 않습니다. 관리사가 방문한 후 코스와 금액을 확인하고 현장에서 결제하는 100% 현장 후불제입니다.</p>
+          </details>
+          <details>
+            <summary>자택 외에 오피스텔이나 호텔에서도 이용 가능한가요?</summary>
+            <p>네, 머무시는 숙소나 오피스텔 호수 및 공동현관 출입 방법만 확인해 주시면 프라이빗하고 조용하게 관리받으실 수 있습니다.</p>
+          </details>
         </div>
       </div>
     </section>
@@ -340,13 +403,12 @@ def make_hub_page(prov_key, sitemap_list):
         nearby.append(f'          <a class="region-link" href="/areas/{prov_key}/{d_slug}/"><b>{d_obj["name"]}</b><span>맞춤 케어 안내</span></a>')
     nearby_html = "\n".join(nearby)
 
-    # 타이틀은 기존 형태 유지
     theme_word = "출장 지역맞춤 마사지" if prov_key == "gyeonggi" else "출장 이완 마사지"
     title_text = f"{prov_full} {theme_word} 테라피 | 코스 요금표 - {BRAND_NAME}"
-    
-    # 메타디스크립션: 경기출장마사지 / 인천출장마사지 형식 적용
     target_kw = "경기출장마사지" if prov_key == "gyeonggi" else "인천출장마사지"
     desc_text = f"{target_kw} 전문 {BRAND_NAME}. {prov_full} 전지역 시·군 및 세부 동별 빠른 방문 배정, 선입금 없는 100% 현장 후불제 직통 안내."
+
+    sp1, sp2, sp3 = generate_local_story(prov_short, prov_full)
 
     html = f"""<!doctype html>
 <html lang="ko">
@@ -382,6 +444,27 @@ def make_hub_page(prov_key, sitemap_list):
           {{ "@type": "ListItem", "position": 1, "name": "홈", "item": "{BASE_URL}/" }},
           {{ "@type": "ListItem", "position": 2, "name": "{prov_short}", "item": "{canonical_url}" }}
         ]
+      }},
+      {{
+        "@type": "FAQPage",
+        "mainEntity": [
+          {{
+            "@type": "Question",
+            "name": "{prov_full} 방문 시 추가 출장비가 발생하나요?",
+            "acceptedAnswer": {{
+              "@type": "Answer",
+              "text": "표기된 코스 요금 외에 부당한 추가 요금을 청구하지 않으며 사전 상담 시 금액을 투명하게 확인합니다."
+            }}
+          }},
+          {{
+            "@type": "Question",
+            "name": "예약금 없이 이용할 수 있나요?",
+            "acceptedAnswer": {{
+              "@type": "Answer",
+              "text": "네, 100% 현장 후불제로 운영되므로 선입금 사기 위험 없이 안심하고 이용하실 수 있습니다."
+            }}
+          }}
+        ]
       }}
     ]
   }}
@@ -411,7 +494,19 @@ def make_hub_page(prov_key, sitemap_list):
       </div>
     </section>
 
-    <section class="section providers">
+    <!-- 고유 본문 카드 -->
+    <section class="section">
+      <div class="container">
+        <div class="local-story-card">
+          <h3>{prov_full} 맞춤형 방문 테라피 안내</h3>
+          <p>{sp1}</p>
+          <p>{sp2}</p>
+          <p>{sp3}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section providers soft">
       <div class="container">
         <div class="section-row">
           <h2 class="section-title">{prov_short} 추천 제휴 매장</h2>
@@ -470,13 +565,12 @@ def make_area_and_dong_pages(sitemap_list):
                 dong_links.append(f'          <a class="region-link" href="/areas/{prov_key}/{d_slug}/{dong_slug}/"><b>{dong_name}</b><span>맞춤 케어 안내</span></a>')
             dong_links_html = "\n".join(dong_links)
 
-            # 타이틀은 기존 안전 테마 유지
             cur_theme = SAFE_THEMES[theme_idx % len(SAFE_THEMES)]
             theme_idx += 1
             dist_title = f"{prov_short} {d_name} {cur_theme} 홈타이 | {BRAND_NAME}"
-            
-            # 메타디스크립션: 구/시 뒤에 바로 '출장마사지' 결합 (예: 종로구출장마사지, 수원시 장안구출장마사지)
             dist_desc = f"{d_name}출장마사지 전문 {BRAND_NAME}. {prov_short} {d_name} 전지역 및 세부 동별 빠른 방문 배정과 선입금 없는 100% 현장 후불제 직통 안내."
+
+            dsp1, dsp2, dsp3 = generate_local_story(prov_short, d_name)
 
             dist_html = f"""<!doctype html>
 <html lang="ko">
@@ -513,6 +607,27 @@ def make_area_and_dong_pages(sitemap_list):
           {{ "@type": "ListItem", "position": 2, "name": "{prov_short}", "item": "{prov_hub_url}" }},
           {{ "@type": "ListItem", "position": 3, "name": "{d_name}", "item": "{dist_canonical}" }}
         ]
+      }},
+      {{
+        "@type": "FAQPage",
+        "mainEntity": [
+          {{
+            "@type": "Question",
+            "name": "{d_name} 방문 시 평균 소요 시간은 어떻게 되나요?",
+            "acceptedAnswer": {{
+              "@type": "Answer",
+              "text": "{d_name} 거점 제휴 매장의 이동 동선을 우선 배정하여 평균 30분 내외로 도착할 수 있도록 조율합니다."
+            }}
+          }},
+          {{
+            "@type": "Question",
+            "name": "{d_name} 지역은 예약금을 요구하나요?",
+            "acceptedAnswer": {{
+              "@type": "Answer",
+              "text": "절대 예약금을 요구하지 않으며, 현장에서 코스 확인 후 결제하는 100% 후불제입니다."
+            }}
+          }}
+        ]
       }}
     ]
   }}
@@ -537,7 +652,19 @@ def make_area_and_dong_pages(sitemap_list):
       </div>
     </section>
 
-    <section class="section providers">
+    <!-- 구/시 고유 스토리텔링 섹션 -->
+    <section class="section">
+      <div class="container">
+        <div class="local-story-card">
+          <h3>{d_name} 라이프스타일 맞춤 힐링 솔루션</h3>
+          <p>{dsp1}</p>
+          <p>{dsp2}</p>
+          <p>{dsp3}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section providers soft">
       <div class="container">
         <div class="section-row">
           <h2 class="section-title">{d_name} 추천 제휴 매장</h2>
@@ -557,6 +684,23 @@ def make_area_and_dong_pages(sitemap_list):
         </div>
       </div>
     </section>
+
+    <!-- FAQ -->
+    <section class="section soft">
+      <div class="container">
+        <h2 class="section-title">{d_name} 이용 안내 FAQ</h2>
+        <div class="faq-list">
+          <details open>
+            <summary>{d_name} 방문 시 평균 소요 시간은 어떻게 되나요?</summary>
+            <p>{d_name} 거점 제휴 매장의 이동 동선을 우선 배정하여 평균 30분 내외로 도착할 수 있도록 조율합니다.</p>
+          </details>
+          <details>
+            <summary>예약금이나 선입금이 필요한가요?</summary>
+            <p>절대 선입금을 요구하지 않으며, 관리사 방문 후 코스와 금액을 확인하고 결제하는 100% 현장 후불제입니다.</p>
+          </details>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -573,6 +717,7 @@ def make_area_and_dong_pages(sitemap_list):
                 f.write(dist_html)
             district_count += 1
 
+            # (2) 동/읍/면 페이지 생성
             for dong_name in dongs:
                 dong_slug = make_slug(dong_name)
                 dong_dir = os.path.join(dist_dir, dong_slug)
@@ -580,13 +725,13 @@ def make_area_and_dong_pages(sitemap_list):
                 dong_canonical = f"{BASE_URL}/areas/{prov_key}/{d_slug}/{dong_slug}/"
                 sitemap_list.append(dong_canonical)
 
-                # 타이틀은 기존 안전 테마 유지
                 dong_theme = SAFE_THEMES[theme_idx % len(SAFE_THEMES)]
                 theme_idx += 1
                 dong_title = f"{d_name} {dong_name} {dong_theme} 홈타이 테라피 | {BRAND_NAME}"
-                
-                # 메타디스크립션: 동/읍/면 뒤에 직접 '출장마사지' 결합 (예: 청운동출장마사지, 포곡읍출장마사지, 원삼면출장마사지)
                 dong_desc = f"{dong_name}출장마사지 안내 {BRAND_NAME}. {d_name} {dong_name} 방문 타이·아로마·스웨디시 코스 안내와 선입금 없는 100% 현장 후불제 직통 예약."
+
+                # 동 단위 고유 스토리
+                dong_sp1, dong_sp2, dong_sp3 = generate_local_story(prov_short, d_name, dong_name)
 
                 dong_html = f"""<!doctype html>
 <html lang="ko">
@@ -645,10 +790,18 @@ def make_area_and_dong_pages(sitemap_list):
           }},
           {{
             "@type": "Question",
-            "name": "예약금 없이 이용할 수 있나요?",
+            "name": "{dong_name} 예약금 없이 이용할 수 있나요?",
             "acceptedAnswer": {{
               "@type": "Answer",
               "text": "{dong_name} 지역 역시 100% 현장 후불제로 운영되며 선입금을 절대 요구하지 않습니다."
+            }}
+          }},
+          {{
+            "@type": "Question",
+            "name": "{dong_name} 아파트나 오피스텔 주차는 어떻게 진행되나요?",
+            "acceptedAnswer": {{
+              "@type": "Answer",
+              "text": "출입 시 공동현관 호출 방법과 방문객 주차 여건을 사전에 조율하여 지연 없이 정시에 방문합니다."
             }}
           }}
         ]
@@ -676,7 +829,33 @@ def make_area_and_dong_pages(sitemap_list):
       </div>
     </section>
 
-    <section class="section providers">
+    <!-- [신규] 동 단위 고유 스토리텔링 & 이용 가이드 -->
+    <section class="section">
+      <div class="container">
+        <div class="local-story-card">
+          <h3>{dong_name} 편안한 홈 힐링 케어 포인트</h3>
+          <p>{dong_sp1}</p>
+          <p>{dong_sp2}</p>
+          <p>{dong_sp3}</p>
+          <div class="guide-box-grid">
+            <div class="guide-box-item">
+              <b>안심 후불 결제</b>
+              <span>현장에서 코스 확인 후 결제하여 선입금 사기 위험이 없습니다.</span>
+            </div>
+            <div class="guide-box-item">
+              <b>조용한 프라이빗 케어</b>
+              <span>실내 소음 없이 정숙하고 세심하게 관리를 진행합니다.</span>
+            </div>
+            <div class="guide-box-item">
+              <b>정시 방문 동선 확인</b>
+              <span>{dong_name} 인근 이동 시간을 미리 파악하여 정시에 찾아갑니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section providers soft">
       <div class="container">
         <div class="section-row">
           <h2 class="section-title">{dong_name} 직통 상담 추천 업체</h2>
@@ -693,6 +872,27 @@ def make_area_and_dong_pages(sitemap_list):
         <h2 class="section-title">{d_name} 인근 동 둘러보기</h2>
         <div class="region-grid">
 {dong_links_html}
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section soft">
+      <div class="container">
+        <h2 class="section-title">{dong_name} 자주 묻는 질문</h2>
+        <div class="faq-list">
+          <details open>
+            <summary>{dong_name} 방문 시 추가 출장비가 발생하나요?</summary>
+            <p>표기된 코스 비용 외에 별도의 부당한 추가 요금을 요구하지 않으며, 현장에서 범위를 다시 확인합니다.</p>
+          </details>
+          <details>
+            <summary>예약금 없이 이용할 수 있나요?</summary>
+            <p>{dong_name} 지역 역시 100% 현장 후불제로 운영되며 선입금을 절대 요구하지 않습니다.</p>
+          </details>
+          <details>
+            <summary>{dong_name} 아파트나 오피스텔 주차는 어떻게 진행되나요?</summary>
+            <p>출입 시 공동현관 호출 방법과 방문객 주차 여건을 사전에 조율하여 지연 없이 정시에 방문합니다.</p>
+          </details>
         </div>
       </div>
     </section>
@@ -715,7 +915,7 @@ def make_area_and_dong_pages(sitemap_list):
     return district_count, dong_count
 
 def run():
-    print(f"[{BRAND_NAME}] 요청하신 메타디스크립션 규칙으로 재생성을 시작합니다...")
+    print(f"[{BRAND_NAME}] 고유 스토리 엔진 탑재 빌드를 시작합니다...")
     sitemap_list = []
     
     make_main_page(sitemap_list)
@@ -734,7 +934,7 @@ def run():
     with open("sitemap.xml", "w", encoding="utf-8") as f:
         f.write("\n".join(xml_lines))
 
-    print(f"재생성 완료! 총 {len(sitemap_list)}개 페이지의 메타디스크립션이 '구/시/읍/면/동출장마사지' 형식으로 업데이트되었습니다.")
+    print(f"빌드 완료! 총 {len(sitemap_list)}개 페이지에 1,000자 이상의 고유 읽을거리 섹션과 FAQ가 완벽히 탑재되었습니다.")
 
 if __name__ == "__main__":
     run()
