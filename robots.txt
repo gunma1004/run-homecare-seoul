@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://run-homecare-seoul.netlify.app/sitemap.xml
